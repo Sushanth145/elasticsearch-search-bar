@@ -12,26 +12,32 @@
 </head>
 <body>
   <label for="searchBox">Search products:</label>
-  <input id="searchBox" placeholder="Enter product name or category" aria-label="Search products" />
-  <button onclick="searchProducts()">Search</button>
-
+  <input id="searchBox" placeholder="Enter product name or category" aria-label="Search products" autocomplete="off" />
   <ul id="results"></ul>
   <div id="errorMsg" role="alert" aria-live="assertive"></div>
 
   <script>
-    async function searchProducts() {
-      const queryInput = document.getElementById('searchBox');
-      const resultsList = document.getElementById('results');
-      const errorDiv = document.getElementById('errorMsg');
+    const queryInput = document.getElementById('searchBox');
+    const resultsList = document.getElementById('results');
+    const errorDiv = document.getElementById('errorMsg');
 
+    let debounceTimeout = null;
+
+    queryInput.addEventListener('input', () => {
+      clearTimeout(debounceTimeout);
+      debounceTimeout = setTimeout(() => {
+        searchProducts();
+      }, 500); // 1000ms = 1 second debounce
+    });
+
+    async function searchProducts() {
       const query = queryInput.value.trim();
 
-      // Clear previous results and errors
       resultsList.innerHTML = '';
       errorDiv.textContent = '';
 
       if (!query) {
-        errorDiv.textContent = 'Please enter a search query.';
+        // Optionally clear results if input is empty
         return;
       }
 
