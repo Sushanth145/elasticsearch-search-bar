@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Product Search</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    #results li { margin-bottom: 0.5rem; }
+    #errorMsg { color: red; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <label for="searchBox">Search products:</label>
+  <input id="searchBox" placeholder="Enter product name or category" aria-label="Search products" />
+  <button onclick="searchProducts()">Search</button>
+
+  <ul id="results"></ul>
+  <div id="errorMsg" role="alert" aria-live="assertive"></div>
+
+  <script>
+    async function searchProducts() {
+      const queryInput = document.getElementById('searchBox');
+      const resultsList = document.getElementById('results');
+      const errorDiv = document.getElementById('errorMsg');
+
+      const query = queryInput.value.trim();
+
+      // Clear previous results and errors
+      resultsList.innerHTML = '';
+      errorDiv.textContent = '';
+
+      if (!query) {
+        errorDiv.textContent = 'Please enter a search query.';
+        return;
+      }
+
+      try {
+        const encodedQuery = encodeURIComponent(query);
+        const response = await fetch(`http://localhost:5000/api/products/search?q=${encodedQuery}`);
+
+        if (!response.ok) {
+          throw new Error(`Server error: ${response.status}`);
+        }
+
+        const products = await response.json();
+
+        if (products.length === 0) {
+          resultsList.innerHTML = '<li>No products found.</li>';
+          return;
+        }
+
+        resultsList.innerHTML = products.map(p =>
+          `<li>${escapeHtml(p.name)} - ₹${p.price}</li>`
+        ).join('');
+      } catch (error) {
+        errorDiv.textContent = 'Failed to fetch products. Please try again later.';
+        console.error('Search error:', error);
+      }
+    }
+
+    // Basic HTML escaping to prevent XSS attacks
+    function escapeHtml(text) {
+      return text.replace(/[&<>"']/g, function(m) {
+        return ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        })[m];
+      });
+    }
+  </script>
+</body>
+</html>
